@@ -8,7 +8,7 @@ I'd love to expand the usability further, but atm it works for me&trade;.
 
 ## Installing
 
-AUR can be found here: 
+AUR can be found [here](https://aur.archlinux.org/packages/secureboot.sh/)
 
 ## Setup
 
