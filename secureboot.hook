@@ -7,6 +7,6 @@ Target = dracut
 
 [Action]
 When = PostTransaction
-Exec = /root/secureboot.sh installKernel
+Exec = /usr/bin/secureboot.sh installKernel
 Depends = efitools
 Depends = sbsigntools
