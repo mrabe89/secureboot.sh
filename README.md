@@ -1,8 +1,10 @@
 # secureboot.sh
 
 secureboot.sh is a very basic script to setup secureboot tailored specifically for my setup.
+
 (Thinkpad running archlinux with dracut, systemd-boot and ESP mounted in /boot)
-I'd love to expand the usability further, but atm it works for me&copy;.
+
+I'd love to expand the usability further, but atm it works for me&trade;.
 
 ## Installing
 
@@ -34,4 +36,4 @@ Finally to install/sign the unified UEFI kernel is done via.
 ```
 secureboot.sh installKernel
 ```
-This task will also run everytime the kernel is upgraded (via [secureboot.hook])
+This task will also run everytime the kernel is upgraded (via [secureboot.hook](secureboot.hook))
