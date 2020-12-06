@@ -16,25 +16,22 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
+V=0.0.2
+
 set -e
 
-if [ "$USER" == "root" ]; then
-	DEST="/boot/EFI/Linux/"
-	KEYSDIR="/etc/secureboot/keys/"
-	KEYTOOLDEST="/boot/EFI/KeyTool/"
-	KEYTOOLLDCF="/boot/loader/entries/keytool.conf"
-	BOOTLOADER="/boot/EFI/systemd/systemd-bootx64.efi"
-else
-	echo ">> Running in Development Mode"
+CONFFILE="/etc/secureboot/config"
+if [ "$USER" != "root" ] && [ -e "./conf/devel" ]; then
+	CONFFILE="./conf/devel"
+fi
 
-	DEST="/tmp/ukout/"
-	KEYSDIR="/tmp/ukeys/"
-	KEYTOOLDEST="/tmp/uktool/"
-	KEYTOOLLDCF="/tmp/uktool/keytool.conf"
-	BOOTLOADER="/tmp/uktool/systemd-bootx64.efi"
+set +e
+source "${CONFFILE}"
+set -e
 
-	mkdir -p ${DEST} ${KEYTOOLDEST}
-	cp "/boot/EFI/systemd/systemd-bootx64.efi" "${BOOTLOADER}"
+if [ "${CMDLINEOPTS}" == "" ]; then
+	echo "$0: cmdline not configured; please check ${CONFFILE}"
+	exit 1
 fi
 
 function usage {
@@ -42,8 +39,15 @@ function usage {
 	echo "available cmds:"
 	echo -e "\tall"
 	echo -e "\tgenKeys <CNBASE>"
-	echo -e "\tinstallKernel"
+	echo -e "\tenrollKeys (via efi-updatevar)"
 	echo -e "\tinstallKeyTool"
+	echo -e "\tinstallKernel"
+	echo -e "\tsignBootloader (${BOOTLOADER})"
+	echo -e "\tsignFwupd (${FWUPDEFI})"
+	echo -e "\tshowInstalledKeys (via efi-readvar)"
+	echo -e "\twasSecureBooted"
+	echo "installed version: ${V}"
+	echo "used conffile: ${CONFFILE}"
 	exit 1
 }
 
@@ -56,15 +60,25 @@ function genKeys {
 
 	function genKey {
 		echo "== Generating $1 $2"
-		openssl req -newkey rsa:4096 -nodes -keyout "$4.key" -new -x509 -sha256 -days 3650 \
+		openssl req -newkey rsa:2048 -nodes -keyout "$4.key" -new -x509 -sha256 -days 3650 \
 			-subj "/CN=$1 $2/" -out "$4.crt"
-		openssl x509 -outform DER -in "$4.crt" -out "$4.cer"
 		cert-to-efi-sig-list -g "$3" "$4.crt" "$4.esl"
-		sign-efi-sig-list -g "$3" -k "$5.key" -c "$5.crt" "$2" "$4.esl" "$4.auth"
+		sign-efi-sig-list -g "$3" -c "$5.crt" -k "$5.key" "$2" "$4.esl" "$4.auth"
 	}
 	genKey "$1" "PK"  "$(< ${KEYSDIR}GUID.txt)" "${KEYSDIR}PK"  "${KEYSDIR}PK" 
 	genKey "$1" "KEK" "$(< ${KEYSDIR}GUID.txt)" "${KEYSDIR}KEK" "${KEYSDIR}PK" 
 	genKey "$1" "db"  "$(< ${KEYSDIR}GUID.txt)" "${KEYSDIR}db"  "${KEYSDIR}KEK" 
+}
+
+function enrollKeys {
+	echo "== enrolling Keys"
+	mount -o rw,remount /sys/firmware/efi/efivars
+
+	efi-updatevar -e -f ${KEYSDIR}db.esl db
+	efi-updatevar -e -f ${KEYSDIR}KEK.esl KEK
+	efi-updatevar -f ${KEYSDIR}PK.auth PK
+
+	mount -o ro,remount /sys/firmware/efi/efivars
 }
 
 function installKeyTool {
@@ -77,7 +91,7 @@ EOF
 	sbsign --key "${KEYSDIR}db.key" --cert "${KEYSDIR}db.crt" \
 		--output "${KEYTOOLDEST}KeyTool.efi" "/usr/share/efitools/efi/KeyTool.efi"
 	sbverify --cert "${KEYSDIR}db.crt" "${KEYTOOLDEST}KeyTool.efi"
-	cp "${KEYSDIR}"*.cer "${KEYSDIR}"*.auth "${KEYSDIR}"*.esl "${KEYTOOLDEST}/"
+	cp "${KEYSDIR}"*.auth "${KEYSDIR}"*.esl "${KEYTOOLDEST}/"
 }
 
 function installKernel {
@@ -93,9 +107,7 @@ function installKernel {
 	CMDLINEFILE="${BUILDDIR}/cmdline.txt"
 	echo "== CREATING ${CMDLINEFILE}"
 	cat >${CMDLINEFILE} <<EOF
-rd.luks.name=67f49f61-f70b-40f1-816a-5052c0663cb6=pv00 \
-rd.luks.allow-discards \
-rd.lvm.vg=vg00 root=/dev/mapper/vg00-root
+${CMDLINEOPTS}
 EOF
 
 	UCODETXZ=${BUILDDIR}/intel-ucode.tar.xz
@@ -135,7 +147,7 @@ EOF
 }
 
 function signBootloader {
-	echo "== Signing Bootloader (if needed)"
+	echo "== Signing Bootloader ${BOOLOADER} (if needed)"
 	sbverify --cert "${KEYSDIR}db.crt" "${BOOTLOADER}" || (
 		sbsign --key "${KEYSDIR}db.key" --cert "${KEYSDIR}db.crt" \
 			--output "${BOOTLOADER}" "${BOOTLOADER}" &&
@@ -143,6 +155,24 @@ function signBootloader {
 	)
 }
 
+function signFwupd {
+	echo "== Signing fwupd loader ${FWUPDEFI}"
+	sbsign --key "${KEYSDIR}db.key" --cert "${KEYSDIR}db.crt" "${FWUPDEFI}"
+	sbverify --cert "${KEYSDIR}db.crt" "${FWUPDEFI}.signed"
+}
+
+function showInstalledKeys {
+	efi-readvar
+}
+
+function wasSecureBooted {
+	state=`od --address-radix=n --format=u1 /sys/firmware/efi/efivars/SecureBoot* | cut -c 20`
+	desc="No"
+	if [ "${state}" == "1" ]; then
+		desc="Yes"
+	fi
+	echo "${desc}(${state})"
+}
 
 [ $# -ne 0 ] || usage
 
@@ -153,10 +183,14 @@ case $1 in
 esac
 
 case $1 in
-	all) 		genKeys $2; installKeyTool; installKernel; signBootloader ;;
-	genKeys)	genKeys $2 ;;
-	installKeyTool)	installKeyTool ;;
-	installKernel)	installKernel ;;
-	signBootloader)	signBootloader ;;
+	all) 			genKeys "$2"; installKeyTool; installKernel; signBootloader ;;
+	genKeys)		genKeys "$2" ;;
+	enrollKeys)		enrollKeys ;;
+	installKeyTool)		installKeyTool ;;
+	installKernel)		installKernel ;;
+	signBootloader)		signBootloader ;;
+	signFwupd)		signFwupd ;;
+	showInstalledKeys)	showInstalledKeys ;;
+	wasSecureBooted)	wasSecureBooted ;;
 	*) echo "Unkown command: $1"; usage ;;
 esac

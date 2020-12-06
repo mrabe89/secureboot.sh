@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+echo ">> Loading Development Values"
+
+CMDLINEOPTS="\
+rd.luks.name=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx=xxxx \
+rd.luks.allow-discards \
+rd.lvm.vg=xxxx root=/dev/mapper/xxxx-root"
+
+ESP="/boot/efi/"
+
+DEST="/tmp/ukout/"
+KEYSDIR="/tmp/ukeys/"
+KEYTOOLDEST="/tmp/uktool/"
+KEYTOOLLDCF="/tmp/uktool/keytool.conf"
+BOOTLOADER="/tmp/uktool/systemd-bootx64.efi"
+FWUPDEFI="/tmp/uktool/fwupdx64.efi"
+
+mkdir -p ${DEST} ${KEYTOOLDEST}
+cp "${ESP}/EFI/systemd/systemd-bootx64.efi" "${BOOTLOADER}"
+[ -e "/usr/lib/fwupd/efi/fwupdx64.efi" ] && cp "/usr/lib/fwupd/efi/fwupdx64.efi" "${FWUPDEFI}"

@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+ESP="/boot/efi/"
+
+# must be set
+CMDLINEOPTS=""
+
+DEST="${ESP}EFI/Linux/"
+KEYSDIR="/etc/secureboot/keys/"
+KEYTOOLDEST="${ESP}EFI/KeyTool/"
+KEYTOOLLDCF="${ESP}loader/entries/keytool.conf"
+
+BOOTLOADER="${ESP}EFI/systemd/systemd-bootx64.efi"
+# Dont forget to set "DisableShimForSecureBoot=true" in /etc/fwupd/uefi.conf
+FWUPDEFI="/usr/lib/fwupd/efi/fwupdx64.efi"
