@@ -7,9 +7,11 @@ rd.luks.name=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx=xxxx \
 rd.luks.allow-discards \
 rd.lvm.vg=xxxx root=/dev/mapper/xxxx-root"
 
+DISTRO="gentoo"
 ESP="/boot/efi/"
 
 DEST="/tmp/ukout/"
+CDEST="/tmp/ukout/"
 KEYSDIR="/tmp/ukeys/"
 KEYTOOLDEST="/tmp/uktool/"
 KEYTOOLLDCF="/tmp/uktool/keytool.conf"

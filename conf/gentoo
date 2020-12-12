@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DISTRO="arch"
+DISTRO="gentoo"
 
 # must be set
 CMDLINEOPTS=""

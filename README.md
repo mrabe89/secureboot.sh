@@ -2,7 +2,7 @@
 
 secureboot.sh is a very basic script to setup secureboot tailored specifically for my setup.
 
-(Thinkpad running archlinux with dracut, systemd-boot and ESP mounted in /boot)
+(Thinkpad running archlinux with dracut, systemd-boot and ESP mounted on /boot/efi)
 
 I'd love to expand the usability further, but atm it works for me&trade;.
 
