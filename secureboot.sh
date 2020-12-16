@@ -35,13 +35,13 @@ if [ "${CMDLINEOPTS}" == "" ]; then
 fi
 
 # Load defaults
-ESP="${ESP:- /boot/efi/}"
-DEST="${DEST:- ${ESP}EFI/Linux/}"
-CDEST="${CDEST:- ${ESP}loader/entries/}"
-KEYSDIR="${KEYSDIR:- /etc/secureboot/keys/}"
-KEYTOOLDEST="${KEYTOOLDEST:- ${ESP}EFI/KeyTool/}"
-KEYTOOLLDCF="${KEYTOOLLDCF:- ${ESP}loader/entries/keytool.conf}"
-BOOTLOADER="${BOOTLOADER:- ${ESP}EFI/systemd/systemd-bootx64.efi}"
+ESP="${ESP:-/boot/efi/}"
+DEST="${DEST:-${ESP}EFI/Linux/}"
+CDEST="${CDEST:-${ESP}loader/entries/}"
+KEYSDIR="${KEYSDIR:-/etc/secureboot/keys/}"
+KEYTOOLDEST="${KEYTOOLDEST:-${ESP}EFI/KeyTool/}"
+KEYTOOLLDCF="${KEYTOOLLDCF:-${ESP}loader/entries/keytool.conf}"
+BOOTLOADER="${BOOTLOADER:-${ESP}EFI/systemd/systemd-bootx64.efi}"
 
 function usage {
 	echo "$0: cmd "
