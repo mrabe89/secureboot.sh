@@ -15,9 +15,11 @@ CDEST="/tmp/ukout/"
 KEYSDIR="/tmp/ukeys/"
 KEYTOOLDEST="/tmp/uktool/"
 KEYTOOLLDCF="/tmp/uktool/keytool.conf"
-BOOTLOADER="/tmp/uktool/systemd-bootx64.efi"
+BOOTLOADER=("/tmp/uktool/systemd-bootx64 .efi" "/tmp/uktool/systemd-bootx64_2.efi")
 FWUPDEFI="/tmp/uktool/fwupdx64.efi"
 
 mkdir -p ${DEST} ${KEYTOOLDEST}
-cp "${ESP}/EFI/systemd/systemd-bootx64.efi" "${BOOTLOADER}"
+for i in ${!BOOTLOADER[*]}; do
+	cp "${ESP}/EFI/systemd/systemd-bootx64.efi" "${BOOTLOADER[$i]}"
+done
 [ -e "/usr/lib/fwupd/efi/fwupdx64.efi" ] && cp "/usr/lib/fwupd/efi/fwupdx64.efi" "${FWUPDEFI}"

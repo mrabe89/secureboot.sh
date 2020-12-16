@@ -16,9 +16,18 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-V=0.0.3
+V=0.0.4
 
 set -e
+
+# Load defaults
+ESP="/boot/efi/"
+DEST="${ESP}EFI/Linux/"
+CDEST="${ESP}loader/entries/"
+KEYSDIR="/etc/secureboot/keys/"
+KEYTOOLDEST="${ESP}EFI/KeyTool/"
+KEYTOOLLDCF="${ESP}loader/entries/keytool.conf"
+BOOTLOADER=("${ESP}EFI/BOOT/BOOTX64.EFI" "${ESP}EFI/systemd/systemd-bootx64.efi")
 
 CONFFILE="/etc/secureboot/config"
 if [ "$USER" != "root" ] && [ -e "./conf/devel" ]; then
@@ -33,15 +42,6 @@ if [ "${CMDLINEOPTS}" == "" ]; then
 	echo "$0: cmdline not configured; please check ${CONFFILE}"
 	exit 1
 fi
-
-# Load defaults
-ESP="${ESP:-/boot/efi/}"
-DEST="${DEST:-${ESP}EFI/Linux/}"
-CDEST="${CDEST:-${ESP}loader/entries/}"
-KEYSDIR="${KEYSDIR:-/etc/secureboot/keys/}"
-KEYTOOLDEST="${KEYTOOLDEST:-${ESP}EFI/KeyTool/}"
-KEYTOOLLDCF="${KEYTOOLLDCF:-${ESP}loader/entries/keytool.conf}"
-BOOTLOADER="${BOOTLOADER:-${ESP}EFI/systemd/systemd-bootx64.efi}"
 
 function usage {
 	echo "$0: cmd "
@@ -229,12 +229,14 @@ EOF
 }
 
 function signBootloader {
-	echo "== Signing Bootloader ${BOOLOADER} (if needed)"
-	sbverify --cert "${KEYSDIR}db.crt" "${BOOTLOADER}" || (
-		sbsign --key "${KEYSDIR}db.key" --cert "${KEYSDIR}db.crt" \
-			--output "${BOOTLOADER}" "${BOOTLOADER}" &&
-		sbverify --cert "${KEYSDIR}db.crt" "${BOOTLOADER}" \
-	)
+	for i in ${!BOOTLOADER[*]}; do
+		echo "== Signing Bootloader ${BOOTLOADER[$i]} (if needed)"
+		sbverify --cert "${KEYSDIR}db.crt" "${BOOTLOADER[$i]}" || (
+			sbsign --key "${KEYSDIR}db.key" --cert "${KEYSDIR}db.crt" \
+				--output "${BOOTLOADER}" "${BOOTLOADER[$i]}" &&
+			sbverify --cert "${KEYSDIR}db.crt" "${BOOTLOADER[$i]}" \
+		)
+	done
 }
 
 function signFwupd {
