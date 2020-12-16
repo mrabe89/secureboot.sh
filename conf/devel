@@ -7,7 +7,7 @@ rd.luks.name=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx=xxxx \
 rd.luks.allow-discards \
 rd.lvm.vg=xxxx root=/dev/mapper/xxxx-root"
 
-DISTRO="gentoo"
+DISTRO="arch"
 ESP="/boot/efi/"
 
 DEST="/tmp/ukout/"

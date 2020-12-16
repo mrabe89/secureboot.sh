@@ -104,6 +104,11 @@ EOF
 }
 
 function installKernel {
+	echo "== Cleanup previous kernels"
+	rm -f ${DEST}linux-sb-*.efi
+	rm -f ${CDEST}linux-sb-*.conf
+
+	echo "== Installing kernel(s) now"
 	case "${DISTRO}" in
 		arch)
 			for i in `ls /usr/lib/modules/*/pkgbase`; do
@@ -133,8 +138,8 @@ function installKernel_do {
 	KVER="$1"
 	APND="$2"
 
-	OUT="${DEST}sb-linux-${KVER}${APND}.efi"
-	COUT="${CDEST}sb-linux-${KVER}${APND}.conf"
+	OUT="${DEST}linux-sb-${KVER}${APND}.efi"
+	COUT="${CDEST}linux-sb-${KVER}${APND}.conf"
 
 	case "${DISTRO}" in
 		arch)
@@ -152,9 +157,6 @@ function installKernel_do {
 			;;
 		*) echo "Unknown distro ${DISTRO}"; exit 1;;
 	esac
-
-	echo $KVER
-	echo $VMLINUZFILE
 
 	echo ">> will build ${OUT} for ${KVER}"
 
