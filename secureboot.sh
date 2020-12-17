@@ -16,7 +16,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-V=0.0.4
+V=0.0.5
 
 set -e
 
@@ -233,7 +233,7 @@ function signBootloader {
 		echo "== Signing Bootloader ${BOOTLOADER[$i]} (if needed)"
 		sbverify --cert "${KEYSDIR}db.crt" "${BOOTLOADER[$i]}" || (
 			sbsign --key "${KEYSDIR}db.key" --cert "${KEYSDIR}db.crt" \
-				--output "${BOOTLOADER}" "${BOOTLOADER[$i]}" &&
+				--output "${BOOTLOADER[$i]}" "${BOOTLOADER[$i]}" &&
 			sbverify --cert "${KEYSDIR}db.crt" "${BOOTLOADER[$i]}" \
 		)
 	done
