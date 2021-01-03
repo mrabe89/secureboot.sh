@@ -7,7 +7,7 @@ rd.luks.name=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx=xxxx \
 rd.luks.allow-discards \
 rd.lvm.vg=xxxx root=/dev/mapper/xxxx-root"
 
-DISTRO="arch"
+DISTRO="gentoo"
 ESP="/boot/efi/"
 
 DEST="/tmp/ukout/"
@@ -15,11 +15,13 @@ CDEST="/tmp/ukout/"
 KEYSDIR="/tmp/ukeys/"
 KEYTOOLDEST="/tmp/uktool/"
 KEYTOOLLDCF="/tmp/uktool/keytool.conf"
+LOADERCF="/tmp/uktool/loader.conf"
 BOOTLOADER=("/tmp/uktool/systemd-bootx64 .efi" "/tmp/uktool/systemd-bootx64_2.efi")
 FWUPDEFI="/tmp/uktool/fwupdx64.efi"
 
 mkdir -p ${DEST} ${KEYTOOLDEST}
+cp "${ESP}loader/loader.conf" "${LOADERCF}"
 for i in ${!BOOTLOADER[*]}; do
-	cp "${ESP}/EFI/systemd/systemd-bootx64.efi" "${BOOTLOADER[$i]}"
+	cp "${ESP}EFI/systemd/systemd-bootx64.efi" "${BOOTLOADER[$i]}"
 done
 [ -e "/usr/lib/fwupd/efi/fwupdx64.efi" ] && cp "/usr/lib/fwupd/efi/fwupdx64.efi" "${FWUPDEFI}"

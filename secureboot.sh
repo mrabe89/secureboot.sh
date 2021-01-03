@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2020 Matthias Rabe <mrabe@hatdev.de>
+# Copyright (c) 2021 Matthias Rabe <mrabe@hatdev.de>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-V=0.0.5
+V=0.0.6
 
 set -e
 
@@ -27,6 +27,7 @@ CDEST="${ESP}loader/entries/"
 KEYSDIR="/etc/secureboot/keys/"
 KEYTOOLDEST="${ESP}EFI/KeyTool/"
 KEYTOOLLDCF="${ESP}loader/entries/keytool.conf"
+LOADERCF="${ESP}loader/loader.conf"
 BOOTLOADER=("${ESP}EFI/BOOT/BOOTX64.EFI" "${ESP}EFI/systemd/systemd-bootx64.efi")
 
 CONFFILE="/etc/secureboot/config"
@@ -116,7 +117,6 @@ function installKernel {
 				KVER="${KVER%'/pkgbase'}"
 
 				installKernel_do "${KVER}" ""
-
 			done
 			;;
 		gentoo)
@@ -130,6 +130,28 @@ function installKernel {
 			;;
 		*) echo "Unknown distro ${DISTRO}"; exit 1;;
 	esac
+
+	echo "== Setting Loader default"
+	case "${DISTRO}" in
+		arch) # nothing to do - KVER is already set correctly
+			;;
+		gentoo)
+			NEWEST=`find /boot -name "vmlinuz-*" -exec stat -c "%y %n" {} + | \
+				sort -r | head -n1 | cut -d" " -f 4-`
+			KVER="${NEWEST#'/boot/vmlinuz-'}"
+			;;
+		*) echo "Unknown distro ${DISTRO}"; exit 1;;
+	esac
+	sed -i -e 's/default .*/default linux-sb-'${KVER}'.conf/g' "${LOADERCF}"
+
+	# Checking if loader editor is disabled (would otherwise defeat the purpose of secureboot)
+	if ! grep -q "editor" "${LOADERCF}"; then
+		echo "WARNING: editor is not set in ${LOADERCF} - Default is enabled (risky!)" >&2
+	else
+		if ! grep "editor" "${LOADERCF}" | grep -q "no"; then
+			echo "WARNING: editor is not disabled in ${LOADERCF} (risky!)" >&2
+		fi
+	fi
 }
 
 function installKernel_do {
